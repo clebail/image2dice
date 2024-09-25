@@ -3,33 +3,77 @@
 const SIZE = 20;
 const NB_COUL = 14;
 
-if(count($argv) != 2) {
-    echo "{$argv[0]} filename.jpeg\n";
-    die;
+function usage()
+{
+    echo "{$argv[0]} <options> filename.jpeg\n";
+    echo "-0: sans les zéros\n";
+    echo "-b: que les dés blancs seront utilisés\n";
+    echo "-n: que les dés noirs seront utilisés\n";
+    echo "les options -b et -n ne peuvent pas être utiluisés conjointement.\n";
+    die();
 }
 
-$source = $argv[1];
+$argc = count($argv);
+if($argc < 2) {
+    usage();
+}
+
+$nbCoul = NB_COUL;
+$offset = 0;
+$sans_zero = $only_blanc = $only_noir = false;
+for($i=1;$i<$argc-1;$i++) {
+    if($argv[$i] == -0) {
+        $sans_zero = true;
+    }
+
+    if($argv[$i] == "-b") {
+        $only_blanc = true;
+    }
+
+    if($argv[$i] == "-n") {
+        $only_noir = true;
+    }
+}
+
+if($only_blanc && $only_noir) {
+    usage();
+}
+
+if($only_blanc || $only_noir)
+{
+    $nbCoul = $sans_zero ? 6 : 7;
+
+    $offset = $only_noir ? 7 : ($sans_zero ? 1 : 0);
+} elseif ($sans_zero) {
+    $nbCoul = 12;
+    $offset = 1;
+}
+
+echo "nbCool: {$nbCoul}, offset: {$offset}\n";
+
+$source = $argv[$argc - 1];
 $filename = pathinfo($source, PATHINFO_FILENAME); 
 $size = getimagesize($source);
 $im = imagecreatefromjpeg($source);
 $imDes = imagecreatefrompng("des.png");
 $imd = imagecreatetruecolor($size[0], $size[1]);
+$imNB = imagecreatetruecolor($size[0], $size[1]);
 
 $desCoords = [
-    [0, 0],
-    [20, 0],
-    [40, 0],
-    [60, 0],
-    [80, 0],
-    [100, 0],
-    [120, 0],
-    [120, 20],
-    [100, 20],
-    [80, 20],
-    [60, 20],
-    [40, 20],
-    [20, 20],
-    [0, 20],
+    [0, 0], //0
+    [20, 0],//1
+    [40, 0],//2
+    [60, 0],//3
+    [80, 0],//4
+    [100, 0],//5
+    [120, 0],//6
+    [120, 20],//7
+    [100, 20],//8
+    [80, 20],//9
+    [60, 20],//10
+    [40, 20],//11
+    [20, 20],//12
+    [0, 20],//13
 ];
 
 $stats = [];
@@ -55,27 +99,35 @@ for($y=0;$y<$size[1];$y+=SIZE) {
         $sv /= (SIZE*SIZE);
         $sb /= (SIZE*SIZE);
 
-        $sr = ($sr + $sv + $sb) / 3;
+        $sr = (int)(($sr + $sv + $sb) / 3);
 
         $key = dechex($sr);
         $stats[$key] = $stats[$key] ?? 0;
         $stats[$key]++;
 
         $color_map[$y][$x] = $key;
+
+        $color = imagecolorallocate($imNB, $sr, $sr, $sr);
+        imagefilledrectangle($imNB, $x, $y, $x+SIZE, $y+SIZE, $color);
     }
 }
 
-$seuil = ceil(count($stats)/NB_COUL);
+echo "Nb Composantes : ".count($stats)."\n";
+$seuil = ceil(count($stats)/$nbCoul);
 ksort($stats);
 $result = [];
 
 $i = 1;
-$j = NB_COUL - 1;
+$j = $nbCoul - 1 + $offset;
+echo "j: $j\n";
 foreach($stats as $k => $nb) {
     if(($i % $seuil) == 0) {
+        echo "{$i} => couleur {$j}\n";
+        $nbAffect = 0;
         foreach($stats as $k2 => $nb2) {
-            if($k2 <= $k && !key_exists($k2, $result)) {
+            if(!key_exists($k2, $result) && $nbAffect < $seuil) {
                 $result[$k2] = $j;
+                $nbAffect++;
             }
         }
         $j--;
@@ -84,19 +136,22 @@ foreach($stats as $k => $nb) {
     $i++;
 }
 
+echo "{$i} => couleur {$j}\n";
 foreach($stats as $k2 => $nb2) {
-    if($k2 <= $k && !key_exists($k2, $result)) {
+    if(!key_exists($k2, $result)) {
         $result[$k2] = $j;
     }
 }
+
+echo "j: $j\n";
 
 $nbBlanc = $nbNoir = 0;
 foreach($color_map as $y => $mapx) {
     foreach($mapx as $x => $key) {
         $id = $result[$key];
 
-        $nbBlanc = $nbBlanc + ($id < NB_COUL / 2 ? 1 : 0);
-        $nbNoir = $nbNoir + ($id >= NB_COUL / 2 ? 1 : 0);
+        $nbBlanc = $nbBlanc + ($id < 7 ? 1 : 0);
+        $nbNoir = $nbNoir + ($id >= $nbCoul / 2 ? 1 : 0);
 
         imagecopy($imd, $imDes, $x, $y, $desCoords[$id][0], $desCoords[$id][1], SIZE, SIZE);
     }
@@ -105,3 +160,4 @@ foreach($color_map as $y => $mapx) {
 echo "Blanc: {$nbBlanc}, Noir : {$nbNoir}\n";
 
 imagepng($imd, "{$filename}_result.png");
+imagepng($imNB, "{$filename}_NB.png");
