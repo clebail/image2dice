@@ -9,8 +9,17 @@ function usage()
     echo "-0: sans les zéros\n";
     echo "-b: que les dés blancs seront utilisés\n";
     echo "-n: que les dés noirs seront utilisés\n";
+    echo "-v: affiche les infos de debogage\n";
     echo "les options -b et -n ne peuvent pas être utiluisés conjointement.\n";
     die();
+}
+
+function showMapItem($nb, $id, $s) {
+    if($id < 7) {
+        echo "{$s}{$nb} {$id} blanc";
+    } else {
+        echo "{$s}{$nb} ".($id - (($id - 7) * 2 + 1))." noir";
+    }
 }
 
 $argc = count($argv);
@@ -20,7 +29,7 @@ if($argc < 2) {
 
 $nbCoul = NB_COUL;
 $offset = 0;
-$sans_zero = $only_blanc = $only_noir = false;
+$sans_zero = $only_blanc = $only_noir = $debug = false;
 for($i=1;$i<$argc-1;$i++) {
     if($argv[$i] == -0) {
         $sans_zero = true;
@@ -32,6 +41,10 @@ for($i=1;$i<$argc-1;$i++) {
 
     if($argv[$i] == "-n") {
         $only_noir = true;
+    }
+
+    if($argv[$i] == "-v") {
+        $debug = true;
     }
 }
 
@@ -49,7 +62,7 @@ if($only_blanc || $only_noir)
     $offset = 1;
 }
 
-echo "nbCool: {$nbCoul}, offset: {$offset}\n";
+if($debug) echo "nbCool: {$nbCoul}, offset: {$offset}\n";
 
 $source = $argv[$argc - 1];
 $filename = pathinfo($source, PATHINFO_FILENAME); 
@@ -112,17 +125,17 @@ for($y=0;$y<$size[1];$y+=SIZE) {
     }
 }
 
-echo "Nb Composantes : ".count($stats)."\n";
+if($debug) echo "Nb Composantes : ".count($stats)."\n";
 $seuil = ceil(count($stats)/$nbCoul);
 ksort($stats);
 $result = [];
 
 $i = 1;
 $j = $nbCoul - 1 + $offset;
-echo "j: $j\n";
+if($debug) echo "j: $j\n";
 foreach($stats as $k => $nb) {
     if(($i % $seuil) == 0) {
-        echo "{$i} => couleur {$j}\n";
+        if($debug) echo "{$i} => couleur {$j}\n";
         $nbAffect = 0;
         foreach($stats as $k2 => $nb2) {
             if(!key_exists($k2, $result) && $nbAffect < $seuil) {
@@ -136,25 +149,48 @@ foreach($stats as $k => $nb) {
     $i++;
 }
 
-echo "{$i} => couleur {$j}\n";
+if($debug) echo "{$i} => couleur {$j}\n";
 foreach($stats as $k2 => $nb2) {
     if(!key_exists($k2, $result)) {
         $result[$k2] = $j;
     }
 }
 
-echo "j: $j\n";
+if($debug) echo "j: $j\n";
 
+
+$oldId = null;
+$nbId = 0;
 $nbBlanc = $nbNoir = 0;
 foreach($color_map as $y => $mapx) {
+    $s = "";
     foreach($mapx as $x => $key) {
         $id = $result[$key];
 
-        $nbBlanc = $nbBlanc + ($id < 7 ? 1 : 0);
-        $nbNoir = $nbNoir + ($id >= $nbCoul / 2 ? 1 : 0);
+        $blanc = $id < 7;
+        $noir = $id >= $nbCoul / 2;
+
+        if($id != $oldId) {
+            if($oldId !== null) {
+                showMapItem($nbId, $oldId, $s);
+                $s = ", ";
+            }
+            $nbId = 0;
+        }
+        $nbId++;
+
+        $nbBlanc = $nbBlanc + ($blanc ? 1 : 0);
+        $nbNoir = $nbNoir + ($noir ? 1 : 0);
 
         imagecopy($imd, $imDes, $x, $y, $desCoords[$id][0], $desCoords[$id][1], SIZE, SIZE);
+
+        $oldId = $id;
     }
+    showMapItem($nbId, $oldId, ", ");
+    echo "\n";
+    $s = "";
+    $oldId = null;
+    $nbId = 0;
 }
 
 echo "Blanc: {$nbBlanc}, Noir : {$nbNoir}\n";
