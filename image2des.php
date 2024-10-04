@@ -18,7 +18,7 @@ function showMapItem($nb, $id, $s) {
     if($id < 7) {
         printf("%s%2d %dB",$s, $nb, $id);
     } else {
-        printf("%s%2d %dB",$s, $nb, 13 - $id);
+        printf("%s%2d %dN",$s, $nb, 13 - $id);
     }
 }
 
