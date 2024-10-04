@@ -16,9 +16,9 @@ function usage()
 
 function showMapItem($nb, $id, $s) {
     if($id < 7) {
-        echo "{$s}{$nb} {$id} blanc";
+        printf("%s%2d %d2B",$s, $nb, $id);
     } else {
-        echo "{$s}{$nb} ".(13 - $id)." noir";
+        printf("%s%2d %d2B",$s, $nb, 13 - $id);
     }
 }
 
