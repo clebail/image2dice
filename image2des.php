@@ -15,11 +15,13 @@ function usage()
 }
 
 function showMapItem($nb, $id, $s) {
-    if($id < 7) {
-        printf("%s%2d %dB",$s, $nb, $id);
-    } else {
-        printf("%s%2d %dN",$s, $nb, 13 - $id);
+    $c = "B";
+    if($id >= 7) {
+        $id = 13 - $id;
+        $c="N";
     }
+    
+    printf("%s%2d %d%s",$s, $nb, $id, $c);
 }
 
 $argc = count($argv);
