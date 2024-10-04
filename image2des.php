@@ -18,7 +18,7 @@ function showMapItem($nb, $id, $s) {
     if($id < 7) {
         echo "{$s}{$nb} {$id} blanc";
     } else {
-        echo "{$s}{$nb} ".($id - (($id - 7) * 2 + 1))." noir";
+        echo "{$s}{$nb} ".(13 - $id)." noir";
     }
 }
 
