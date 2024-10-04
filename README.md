@@ -1,7 +1,7 @@
-Convertir des images en "dice art"
+Convert images to n "dice art"
 
-Pour une bonne exécution du script, l'image doit être découpable en bloc de 20 pixels / 20 pixels
+For proper execution of the script, the image must be cut into blocks of 20 pixels / 20 pixels
 
-Image source : <a href="https://github.com/clebail/image2des/blob/main/tony.jpg"><img src="https://github.com/clebail/image2des/blob/main/tony.jpg" width="300"></a>
+Source image : <a href="https://github.com/clebail/image2des/blob/main/tony.jpg"><img src="https://github.com/clebail/image2des/blob/main/tony.jpg" width="300"></a>
 
-Image destination : <a href="https://github.com/clebail/image2des/blob/main/tony_result.png"><img src="https://github.com/clebail/image2des/blob/main/tony_result.png" width="300"></a>
+Destination image : <a href="https://github.com/clebail/image2des/blob/main/tony_result.png"><img src="https://github.com/clebail/image2des/blob/main/tony_result.png" width="300"></a>
