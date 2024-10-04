@@ -129,7 +129,7 @@ for($y=0;$y<$size[1];$y+=SIZE) {
 
 if($debug) echo "Nb Composantes : ".count($stats)."\n";
 $seuil = ceil(count($stats)/$nbCoul);
-ksort($stats);
+ksort($stats, SORT_STRING);
 $result = [];
 
 $i = 1;
