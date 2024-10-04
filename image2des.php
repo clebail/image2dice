@@ -6,19 +6,19 @@ const NB_COUL = 14;
 function usage()
 {
     echo "{$argv[0]} <options> filename.jpeg\n";
-    echo "-0: sans les zéros\n";
-    echo "-b: que les dés blancs seront utilisés\n";
-    echo "-n: que les dés noirs seront utilisés\n";
-    echo "-v: affiche les infos de debogage\n";
-    echo "les options -b et -n ne peuvent pas être utiluisés conjointement.\n";
+    echo "-0: without zeros dices\n";
+    echo "-w: only white dice will be used\n";
+    echo "-b: only black dice will be used\n";
+    echo "-v: show debugging info\n";
+    echo "the -b and -n options cannot be used together.\n";
     die();
 }
 
 function showMapItem($nb, $id, $s) {
-    $c = "B";
+    $c = "W";
     if($id >= 7) {
         $id = 13 - $id;
-        $c="N";
+        $c="B";
     }
     
     printf("%s%2d %d%s",$s, $nb, $id, $c);
@@ -37,11 +37,11 @@ for($i=1;$i<$argc-1;$i++) {
         $sans_zero = true;
     }
 
-    if($argv[$i] == "-b") {
+    if($argv[$i] == "-w") {
         $only_blanc = true;
     }
 
-    if($argv[$i] == "-n") {
+    if($argv[$i] == "-b") {
         $only_noir = true;
     }
 
@@ -195,7 +195,8 @@ foreach($color_map as $y => $mapx) {
     $nbId = 0;
 }
 
-echo "Blanc: {$nbBlanc}, Noir : {$nbNoir}\n";
+echo "\nDices count:\n";
+echo "White: {$nbBlanc}, Black : {$nbNoir}\n";
 
 imagepng($imd, "{$filename}_result.png");
 imagepng($imNB, "{$filename}_NB.png");
