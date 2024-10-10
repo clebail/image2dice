@@ -5,11 +5,14 @@ const NB_COUL = 14;
 
 function usage()
 {
+    global $argv;
+    
     echo "{$argv[0]} <options> filename.jpeg\n";
     echo "-0: without zeros dices\n";
     echo "-w: only white dice will be used\n";
     echo "-b: only black dice will be used\n";
     echo "-v: show debugging info\n";
+    echo "-s <width,height> Specifies the width and height of a point respectively\n";
     echo "the -b and -n options cannot be used together.\n";
     die();
 }
@@ -31,7 +34,9 @@ if($argc < 2) {
 
 $nbCoul = NB_COUL;
 $offset = 0;
-$sans_zero = $only_blanc = $only_noir = $debug = false;
+$sans_zero = $only_blanc = $only_noir = $debug = $size_spe = false;
+$width = $height = SIZE;
+$sizes = "";
 for($i=1;$i<$argc-1;$i++) {
     if($argv[$i] == -0) {
         $sans_zero = true;
@@ -47,6 +52,11 @@ for($i=1;$i<$argc-1;$i++) {
 
     if($argv[$i] == "-v") {
         $debug = true;
+    }
+    
+    if($argv[$i] == "-s") {
+        $size_spe = true;
+        $sizes = $argv[++$i];
     }
 }
 
@@ -64,6 +74,13 @@ if($only_blanc || $only_noir)
     $offset = 1;
 }
 
+if($size_spe && !preg_match('/([0-9]+),([0-9]+)/', $sizes, $matches)) {
+    usage();
+} else {
+    $width = (int)$matches[1];
+    $height = (int)$matches[2];
+}
+
 if($debug) echo "nbCool: {$nbCoul}, offset: {$offset}\n";
 
 $source = $argv[$argc - 1];
@@ -71,7 +88,7 @@ $filename = pathinfo($source, PATHINFO_FILENAME);
 $size = getimagesize($source);
 $im = imagecreatefromjpeg($source);
 $imDes = imagecreatefrompng("des.png");
-$imd = imagecreatetruecolor($size[0], $size[1]);
+$imd = imagecreatetruecolor($size[0]/$width*SIZE, $size[1]/$height*SIZE);
 $imNB = imagecreatetruecolor($size[0], $size[1]);
 
 $desCoords = [
@@ -97,11 +114,11 @@ $max_key = "";
 
 $color_map = [];
 
-for($y=0;$y<$size[1];$y+=SIZE) {
-    for($x=0;$x<$size[0];$x+=SIZE) {
+for($y=0;$y<$size[1];$y+=$height) {
+    for($x=0;$x<$size[0];$x+=$width) {
         $sr = $sv = $sb = 0;
-        for($j=0;$j<SIZE;$j++) {
-            for($i=0;$i<SIZE;$i++) {
+        for($j=0;$j<$height;$j++) {
+            for($i=0;$i<$width;$i++) {
                 $color = imagecolorat($im, $x+$i, $y+$j);
 
                 $sr += ($color >> 16) & 0xFF;
@@ -110,9 +127,9 @@ for($y=0;$y<$size[1];$y+=SIZE) {
             }
         }
 
-        $sr /= (SIZE*SIZE);
-        $sv /= (SIZE*SIZE);
-        $sb /= (SIZE*SIZE);
+        $sr /= ($width*$height);
+        $sv /= ($width*$height);
+        $sb /= ($width*$height);
 
         $sr = (int)(($sr + $sv + $sb) / 3);
 
@@ -123,7 +140,7 @@ for($y=0;$y<$size[1];$y+=SIZE) {
         $color_map[$y][$x] = $key;
 
         $color = imagecolorallocate($imNB, $sr, $sr, $sr);
-        imagefilledrectangle($imNB, $x, $y, $x+SIZE, $y+SIZE, $color);
+        imagefilledrectangle($imNB, $x, $y, $x+$width, $y+$height, $color);
     }
 }
 
@@ -184,7 +201,7 @@ foreach($color_map as $y => $mapx) {
         $nbBlanc = $nbBlanc + ($blanc ? 1 : 0);
         $nbNoir = $nbNoir + ($noir ? 1 : 0);
 
-        imagecopy($imd, $imDes, $x, $y, $desCoords[$id][0], $desCoords[$id][1], SIZE, SIZE);
+        imagecopy($imd, $imDes, $x/$width*SIZE, $y/$height*SIZE, $desCoords[$id][0], $desCoords[$id][1], SIZE, SIZE);
 
         $oldId = $id;
     }
