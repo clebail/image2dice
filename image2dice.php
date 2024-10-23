@@ -74,11 +74,13 @@ if($only_blanc || $only_noir)
     $offset = 1;
 }
 
-if($size_spe && !preg_match('/([0-9]+),([0-9]+)/', $sizes, $matches)) {
-    usage();
-} else {
-    $width = (int)$matches[1];
-    $height = (int)$matches[2];
+if($size_spe) {
+    if(!preg_match('/([0-9]+),([0-9]+)/', $sizes, $matches)) {
+        usage();
+    } else {
+        $width = (int)$matches[1];
+        $height = (int)$matches[2];
+    }
 }
 
 if($debug) echo "nbCool: {$nbCoul}, offset: {$offset}\n";
