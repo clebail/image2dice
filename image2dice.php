@@ -27,6 +27,40 @@ function showMapItem($nb, $id, $s) {
     printf("%s%2d %d%s",$s, $nb, $id, $c);
 }
 
+function filtre($im) {
+    $w = imagesx($im);
+    $h = imagesy($im);
+    $dst = imagecreatetruecolor($w, $h);
+    $pas = 10;
+    for($y=0;$y<$h;$y++) {
+        for($x=0;$x<$w;$x++) {
+            $sr = $sv = $sb = 0;
+            $nb=0;
+            for($yr=max(0, $y-$pas);$yr<min($h, $y+$pas);$yr++) {
+                for($xr=max(0, $x-$pas);$xr<min($w, $x+$pas);$xr++) {
+                    $color = imagecolorat($im, $xr, $yr);
+
+                    $sr += ($color >> 16) & 0xFF;
+                    $sv += ($color >> 8) & 0xFF;
+                    $sb += ($color >> 0) & 0xFF;
+
+                    $nb++;
+                }
+            }
+
+            $sr /= $nb;
+            $sv /= $nb;
+            $sb /= $nb;
+
+            $sr = (int)(($sr + $sv + $sb) / 3);
+            $color = imagecolorallocate($dst, $sr, $sr, $sr);
+            imagesetpixel($dst, $x, $y, $color);
+        }
+    }
+
+    return $dst;
+}
+
 $argc = count($argv);
 if($argc < 2) {
     usage();
@@ -135,7 +169,7 @@ for($y=0;$y<$size[1];$y+=$height) {
 
         $sr = (int)(($sr + $sv + $sb) / 3);
 
-        $key = dechex($sr);
+        $key = sprintf('%02x', $sr);
         $stats[$key] = $stats[$key] ?? 0;
         $stats[$key]++;
 
