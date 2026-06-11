@@ -72,7 +72,7 @@ $sans_zero = $only_blanc = $only_noir = $debug = $size_spe = false;
 $width = $height = SIZE;
 $sizes = "";
 for($i=1;$i<$argc-1;$i++) {
-    if($argv[$i] == -0) {
+    if($argv[$i] == "-0") {
         $sans_zero = true;
     }
 
@@ -153,8 +153,10 @@ $color_map = [];
 for($y=0;$y<$size[1];$y+=$height) {
     for($x=0;$x<$size[0];$x+=$width) {
         $sr = $sv = $sb = 0;
-        for($j=0;$j<$height;$j++) {
-            for($i=0;$i<$width;$i++) {
+        $bw = min($width, $size[0] - $x);
+        $bh = min($height, $size[1] - $y);
+        for($j=0;$j<$bh;$j++) {
+            for($i=0;$i<$bw;$i++) {
                 $color = imagecolorat($im, $x+$i, $y+$j);
 
                 $sr += ($color >> 16) & 0xFF;
@@ -163,9 +165,9 @@ for($y=0;$y<$size[1];$y+=$height) {
             }
         }
 
-        $sr /= ($width*$height);
-        $sv /= ($width*$height);
-        $sb /= ($width*$height);
+        $sr /= ($bw*$bh);
+        $sv /= ($bw*$bh);
+        $sb /= ($bw*$bh);
 
         $sr = (int)(($sr + $sv + $sb) / 3);
 
@@ -176,7 +178,7 @@ for($y=0;$y<$size[1];$y+=$height) {
         $color_map[$y][$x] = $key;
 
         $color = imagecolorallocate($imNB, $sr, $sr, $sr);
-        imagefilledrectangle($imNB, $x, $y, $x+$width, $y+$height, $color);
+        imagefilledrectangle($imNB, $x, $y, $x+$width-1, $y+$height-1, $color);
     }
 }
 
@@ -223,7 +225,7 @@ foreach($color_map as $y => $mapx) {
         $id = $result[$key];
 
         $blanc = $id < 7;
-        $noir = $id >= $nbCoul / 2;
+        $noir = $id >= 7;
 
         if($id != $oldId) {
             if($oldId !== null) {
